@@ -7,7 +7,7 @@ from dnsdump.dnsdump import (
     DNSDumpAnswer,
     DNSDumpNoAnswer,
     DNSDumpQueryFail )
-from sectools_lib import Context
+from graphrecon_lib import Context
 
 def _get_displayable_name(ctx: Context, name: str, color: str = "green") -> str:
     if ctx.config.nocolor:

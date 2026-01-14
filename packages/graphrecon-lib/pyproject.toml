@@ -1,7 +1,7 @@
 [project]
-name = "sectools-lib"
+name = "graphrecon-lib"
 version = "0.1.0"
-description = "Add your description here"
+description = "Shared library for all graphrecon tools"
 readme = "README.md"
 authors = [
     { name = "Julien OPPLIGER", email = "account@oppliger.cc" }

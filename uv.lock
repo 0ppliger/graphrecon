@@ -5,8 +5,8 @@ requires-python = ">=3.13"
 [manifest]
 members = [
     "dnsdump",
-    "sectools",
-    "sectools-lib",
+    "graphrecon",
+    "graphrecon-lib",
 ]
 
 [[package]]
@@ -24,22 +24,22 @@ version = "0.1.0"
 source = { editable = "packages/dnsdump" }
 dependencies = [
     { name = "dnspython" },
+    { name = "graphrecon-lib" },
     { name = "open-asset-model" },
     { name = "open-asset-store" },
     { name = "pygments" },
     { name = "python-dotenv" },
-    { name = "sectools-lib" },
     { name = "termcolor" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "dnspython", specifier = ">=2.8.0" },
+    { name = "graphrecon-lib", editable = "packages/graphrecon-lib" },
     { name = "open-asset-model", git = "https://github.com/0ppliger/open-asset-model.py.git?branch=master" },
     { name = "open-asset-store", git = "https://github.com/0ppliger/open-asset-store.py.git?branch=master" },
     { name = "pygments", specifier = ">=2.19.2" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
-    { name = "sectools-lib", editable = "packages/sectools-lib" },
     { name = "termcolor", specifier = ">=3.3.0" },
 ]
 
@@ -60,6 +60,44 @@ sdist = { url = "https://files.pythonhosted.org/packages/30/3e/a80a8c077fd798951
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cf/58/8acf1b3e91c58313ce5cb67df61001fc9dcd21be4fadb76c1a2d540e09ed/fqdn-1.5.1-py3-none-any.whl", hash = "sha256:3a179af3761e4df6eb2e026ff9e1a3033d3587bf980a0b1b2e1e5d08d7358014", size = 9121, upload-time = "2021-03-11T07:16:28.351Z" },
 ]
+
+[[package]]
+name = "graphrecon"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "dnsdump" },
+    { name = "graphrecon-lib" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "pyright" },
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "dnsdump", editable = "packages/dnsdump" },
+    { name = "graphrecon-lib", editable = "packages/graphrecon-lib" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "pyright", specifier = ">=1.1.408" },
+    { name = "pytest", specifier = ">=9.0.2" },
+]
+
+[[package]]
+name = "graphrecon-lib"
+version = "0.1.0"
+source = { editable = "packages/graphrecon-lib" }
+dependencies = [
+    { name = "open-asset-store" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "open-asset-store", git = "https://github.com/0ppliger/open-asset-store.py.git?branch=master" }]
 
 [[package]]
 name = "iniconfig"
@@ -103,7 +141,7 @@ dependencies = [
 [[package]]
 name = "open-asset-store"
 version = "0.0.2"
-source = { git = "https://github.com/0ppliger/open-asset-store.py.git?branch=master#7051f94663e7edea83111198df949f8273679746" }
+source = { git = "https://github.com/0ppliger/open-asset-store.py.git?branch=master#981ef6b0d9d3074030bd28b6255917d25b9f1cba" }
 dependencies = [
     { name = "neo4j" },
     { name = "open-asset-model" },
@@ -191,44 +229,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/f8/bf/abbd3cdfb8fbc7fb3
 wheels = [
     { url = "https://files.pythonhosted.org/packages/81/c4/34e93fe5f5429d7570ec1fa436f1986fb1f00c3e0f43a589fe2bbcd22c3f/pytz-2025.2-py2.py3-none-any.whl", hash = "sha256:5ddf76296dd8c44c26eb8f4b6f35488f3ccbf6fbbd7adee0b7262d43f0ec2f00", size = 509225, upload-time = "2025-03-25T02:24:58.468Z" },
 ]
-
-[[package]]
-name = "sectools"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "dnsdump" },
-    { name = "sectools-lib" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "pyright" },
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "dnsdump", editable = "packages/dnsdump" },
-    { name = "sectools-lib", editable = "packages/sectools-lib" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pyright", specifier = ">=1.1.408" },
-    { name = "pytest", specifier = ">=9.0.2" },
-]
-
-[[package]]
-name = "sectools-lib"
-version = "0.1.0"
-source = { editable = "packages/sectools-lib" }
-dependencies = [
-    { name = "open-asset-store" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "open-asset-store", git = "https://github.com/0ppliger/open-asset-store.py.git?branch=master" }]
 
 [[package]]
 name = "termcolor"

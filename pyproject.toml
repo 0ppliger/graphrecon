@@ -1,12 +1,12 @@
 [project]
-name = "sectools"
+name = "graphrecon"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "dnsdump",
-    "sectools-lib",
+    "graphrecon-lib",
 ]
 
 [dependency-groups]
@@ -18,8 +18,8 @@ dev = [
 [tool.uv.sources]
 open-asset-model = { git = "https://github.com/0ppliger/open-asset-model.py.git", branch = "master" }
 open-asset-store = { git = "https://github.com/0ppliger/open-asset-store.py.git", branch = "master" }
-sectools-lib = { workspace = true }
 dnsdump = { workspace = true }
+graphrecon-lib = { workspace = true }
 
 [tool.uv.workspace]
 members = ["packages/*"]

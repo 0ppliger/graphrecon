@@ -41,7 +41,8 @@ class Context():
         
         self.prog_name = parser.prog
         self.config    = parser.parse_args()
-        self.db        = NeoRepository(get_uri(), get_creds())
+        self.db        = NeoRepository(
+            get_uri(), get_creds(), emit_events = True)
 
     def __enter__(self):
         self.db.__enter__()
