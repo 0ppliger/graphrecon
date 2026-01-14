@@ -31,10 +31,10 @@ def add_source(ctx: Context, o: Entity | Edge) -> Optional[Event]:
     
     if type(o) is Entity:
         return ctx.db.create_entity_property(
-            o, SourceProperty(source=ctx.prog_name, confidence=100))
+            o, SourceProperty(source=ctx.source, confidence=100))
     if type(o) is Edge:
         return ctx.db.create_edge_property(
-            o, SourceProperty(source=ctx.prog_name, confidence=100))
+            o, SourceProperty(source=ctx.source, confidence=100))
 
 
 def dispatch(ctx: Context, rdtype: str, rdata: Rdata) -> dict:

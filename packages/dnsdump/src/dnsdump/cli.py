@@ -2,12 +2,13 @@ import json
 from argparse import ArgumentParser
 from termcolor import colored
 from pygments import highlight, lexers, formatters
-from dnsdump.dnsdump import (
+from dnsdump import (
     DNSDump,
     DNSDumpAnswer,
     DNSDumpNoAnswer,
     DNSDumpQueryFail )
 from graphrecon_lib import Context
+
 
 def _get_displayable_name(ctx: Context, name: str, color: str = "green") -> str:
     if ctx.config.nocolor:
@@ -44,7 +45,7 @@ def display_fail(ctx: Context, name: str, error: str) -> None:
 
 def make_argument_parser() -> ArgumentParser:
     parser = ArgumentParser(
-        prog="simple-dnsdump",
+        prog="dnsdump",
         description="Dump all DNS records by requesting every RRType.")
     parser.add_argument("-d", "--domain", type=str, help="Domain name to query", required=True)
     parser.add_argument("-v", "--verbose", help="Show failed attempts", action="store_true")
@@ -57,7 +58,7 @@ def make_argument_parser() -> ArgumentParser:
 def main():
     parser = make_argument_parser()
 
-    with Context(parser) as ctx:
+    with Context.from_argument_parser(parser) as ctx:
         
         if ctx.config.silent and ctx.config.verbose:
             print("*warning*: you've enabled both --verbose and --silent flags.", file=sys.stderr)

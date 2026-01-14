@@ -34,7 +34,13 @@ class DNSDump:
     
     def __init__(self, ctx: Context):
         self.ctx = ctx
-        
+
+        if not hasattr(self.ctx.config, "resolv"):
+            setattr(self.ctx.config, "resolv", "/etc/resolv.conf")
+            
+        if not hasattr(self.ctx.config, "nossource"):
+            setattr(self.ctx.config, "nosource", False)
+            
         try:
             self._resolver = dns.resolver.Resolver(
                 filename=self.ctx.config.resolv,

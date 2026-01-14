@@ -1,5 +1,6 @@
 import os
-from typing import TypeVar
+from types import SimpleNamespace
+from typing import TypeVar, Optional
 from argparse import Namespace, ArgumentParser
 from dataclasses import dataclass
 from asset_store.repository.repository import Repository
@@ -30,19 +31,17 @@ def get_creds() -> tuple[str, str]:
 Data = TypeVar("Data", bound=object)
 
 class Context():
-    prog_name: str
-    config:    Namespace
+    source:    str
+    config:    Optional[object] = None
     db:        Repository
     
-    def __init__(self, parser: ArgumentParser):
-
-        if parser.prog is None or parser.prog == "":
-            raise Exception("missing prog name to parser")
-        
-        self.prog_name = parser.prog
-        self.config    = parser.parse_args()
-        self.db        = NeoRepository(
-            get_uri(), get_creds(), emit_events = True)
+    def __init__(self, source: str, config: Optional[Namespace] = None):
+        self.source = source
+        self.config = SimpleNamespace() if config is None else config
+        self.db = NeoRepository(
+            get_uri(),
+            get_creds(),
+            emit_events = True)
 
     def __enter__(self):
         self.db.__enter__()
@@ -51,3 +50,8 @@ class Context():
     def __exit__(self, exc_type, exc, tb):
         self.db.__exit__(exc_type, exc, tb)
 
+    @staticmethod
+    def from_argument_parser(parser: ArgumentParser) -> 'Context':
+        return Context(
+            parser.prog,
+            parser.parse_args())
