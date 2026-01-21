@@ -1,0 +1,25 @@
+[project]
+name = "dnsfuzz"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Julien OPPLIGER", email = "account@oppliger.cc" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "dnspython>=2.8.0",
+    "graphrecon-lib",
+    "open-asset-model>=1.1.1",
+    "open-asset-store>=0.0.2",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.22,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+graphrecon-lib = { workspace = true }
+
+[project.scripts]
+dnsfuzz = "dnsfuzz.__main__:main"

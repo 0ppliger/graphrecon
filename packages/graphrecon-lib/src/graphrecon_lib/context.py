@@ -35,13 +35,20 @@ class Context():
     config:    Optional[object] = None
     db:        Repository
     
-    def __init__(self, source: str, config: Optional[Namespace] = None):
+    def __init__(
+            self,
+            source: str,
+            config: Optional[Namespace] = None,
+            enforce_taxonomy: bool = True
+    ):
         self.source = source
         self.config = SimpleNamespace() if config is None else config
         self.db = NeoRepository(
             get_uri(),
             get_creds(),
-            emit_events = True)
+            emit_events = True,
+            enforce_taxonomy = enforce_taxonomy
+        )
 
     def __enter__(self):
         self.db.__enter__()
@@ -51,7 +58,8 @@ class Context():
         self.db.__exit__(exc_type, exc, tb)
 
     @staticmethod
-    def from_argument_parser(parser: ArgumentParser) -> 'Context':
+    def from_argument_parser(parser: ArgumentParser, enforce_taxonomy: bool = True) -> 'Context':
         return Context(
             parser.prog,
-            parser.parse_args())
+            parser.parse_args(),
+            enforce_taxonomy = enforce_taxonomy)

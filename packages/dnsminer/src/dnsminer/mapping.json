@@ -1,0 +1,92 @@
+{
+  "^cursor-domain-verification": {
+    "id": "cursor",
+    "name": "Cursor",
+    "type": "Software"
+  },
+  "^docker-verification": {
+    "id": "docker",
+    "name": "Docker",
+    "type": "Software"
+  },
+  "^airtable-verification": {
+    "id": "airtable",
+    "name": "Airtable",
+    "type": "Software"
+  },
+  "^apple-domain-verification": {
+    "id": "apple_business_connect",
+    "name": "Apple Business Connect",
+    "type": "Service"
+  },
+  "^globalsign-domain-verification": {
+    "id": "globalsign",
+    "name": "GlobalSign",
+    "type": "Service"
+  },
+  "^_?globalsign-domain-verification": {
+    "id": "globalsign",
+    "name": "GlobalSign",
+    "type": "Service"
+  },
+  "^google-site-verification": {
+    "id": "google_search_console",
+    "name": "Google Search Console",
+    "type": "Service"
+  },
+  "^atlassian-domain-verification": {
+    "id": "atlassian",
+    "name": "Atlassian",
+    "type": "Software"
+  },
+  "^anthropic-domain-verification": {
+    "id": "anthropic",
+    "name": "Anthropic",
+    "type": "Service"
+  },
+  "^openai-domain-verification": {
+    "id": "openai",
+    "name": "OpenAI",
+    "type": "Service"
+  },
+  "^perplexity-ai-domain-verification": {
+    "id": "perplexity_ai",
+    "name": "Perplexity AI",
+    "type": "Service"
+  },
+  "^elevenlabs": {
+    "id": "elevenlabs",
+    "name": "ElevenLabs",
+    "type": "Service"
+  },
+  "^logmein-verification-code": {
+    "id": "logmein",
+    "name": "LogMeIn",
+    "type": "Software"
+  },
+  "^onetrust-domain-verification": {
+    "id": "onetrust",
+    "name": "OneTrust",
+    "type": "Service"
+  },
+  "^teamviewer-sso-verification": {
+    "id": "teamviewer",
+    "name": "TeamViewer",
+    "type": "Software"
+  },
+  "^wiz-domain-verification": {
+    "id": "wiz",
+    "name": "Wiz",
+    "type": "Service"
+  },
+  "^contractworksverify": {
+    "id": "contractworks",
+    "name": "ContractWorks",
+    "type": "Software"
+  },
+  "^MS": {
+    "id": "microsoft",
+    "name": "Microsoft",
+    "type": "Service"
+  }
+}
