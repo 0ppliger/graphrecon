@@ -1,13 +1,15 @@
 [project]
-name = "dnsminer"
+name = "txtminer"
 version = "0.1.0"
-description = "Add your description here"
+description = "Extract service from domain validation TXT record"
 readme = "README.md"
 authors = [
     { name = "Julien OPPLIGER", email = "account@oppliger.cc" }
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "common",
+    "dnspython>=2.8.0",
     "open-asset-model>=1.1.1",
     "open-asset-store>=0.0.2",
     "termcolor>=3.3.0",
@@ -17,5 +19,8 @@ dependencies = [
 requires = ["uv_build>=0.9.22,<0.10.0"]
 build-backend = "uv_build"
 
+[tool.uv.sources]
+common = { workspace = true }
+
 [project.scripts]
-dnsminer = "dnsminer.cli:main"
+txtminer = "txtminer.__main__:main"

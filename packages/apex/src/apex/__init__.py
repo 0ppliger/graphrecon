@@ -11,27 +11,6 @@ logging.basicConfig(
 logger = logging.getLogger("apex")
 
 
-class InvalidDomain(Exception):
-    domain: str
-
-    def __init__(self, domain: str):
-        super().__init__(f"Invalid domain: {domain}")
-        self.domain = domain
-
-
-def __apex_backend(domain: Name) -> Name:
-    logger.debug(f"check:{domain}")
-
-    nlabel = len(domain.labels)
-    if nlabel == 3:
-        logger.debug(f"find:{domain}")
-        return domain
-    elif nlabel < 3:
-        raise InvalidDomain(domain.to_text(True))
-    else:
-        return __apex_backend(domain.parent())
-
-
 def apex(domain: str) -> str:
     """
     @parameters

@@ -8,12 +8,14 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "apex",
+    "common",
     "dnspython>=2.8.0",
     "open-asset-model>=1.1.1",
     "open-asset-store>=0.0.2",
     "pygments>=2.19.2",
+    "pyrate-limiter>=4.0.2",
     "python-dotenv>=1.2.1",
-    "graphrecon-lib",
     "termcolor>=3.3.0",
 ]
 
@@ -22,7 +24,8 @@ requires = ["uv_build>=0.9.21,<0.10.0"]
 build-backend = "uv_build"
 
 [tool.uv.sources]
-sectools-lib = { workspace = true }
+common = { workspace = true }
+apex = { workspace = true }
 
 [project.scripts]
-dnsdump = "dnsdump.cli:main"
+dnsdump = "dnsdump.__main__:main"

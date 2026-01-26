@@ -8,15 +8,20 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "common",
     "cryptography>=46.0.3",
     "fqdn>=1.5.1",
     "open-asset-model>=1.1.1",
     "open-asset-store>=0.0.2",
+    "termcolor>=3.3.0",
 ]
 
 [build-system]
 requires = ["uv_build>=0.9.21,<0.10.0"]
 build-backend = "uv_build"
 
+[tool.uv.sources]
+common = { workspace = true }
+
 [project.scripts]
-certdump = "certdump.cli:main"
+certdump = "certdump.__main__:main"

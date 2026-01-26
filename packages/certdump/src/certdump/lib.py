@@ -17,7 +17,8 @@ from cryptography.x509.oid import NameOID
 from cryptography.x509.oid import ExtensionOID
 from cryptography.x509.oid import ExtendedKeyUsageOID
 from cryptography.x509 import ExtensionNotFound
-from graphrecon_lib import Context
+from asset_store.repository.repository import Repository
+
 
 T = TypeVar("T")
 A = TypeVar("A")
@@ -67,7 +68,8 @@ def make_info_access_entry(
         raise ValueError("info_access_oid must be AUTHORITY_INFORMATION_ACCESS or SUBJECT_INFORMATION_ACCESS")
 
     try:
-        info_access = cert.extensions.get_extension_for_oid(info_access_oid).value
+        info_access = cert.extensions.get_extension_for_oid(
+            info_access_oid).value
     except Exception:
         return None
 
@@ -177,23 +179,24 @@ def make_certificate_entity(cert: Certificate) -> Entity:
         aki = ""
 
     cert = TLSCertificate(
-        version                  = cert.version.value,
-        serial_number            = str(cert.serial_number),
-        subject_common_name      = sub_cn,
-        issuer_common_name       = iss_cn,
-        not_before               = cert.not_valid_before_utc.isoformat(),
-        not_after                = cert.not_valid_after_utc.isoformat(),
-        key_usage                = key_usage,
-        ext_key_usage            = eku,
-        signature_algorithm      = cert.signature_algorithm_oid._name,
-        public_key_algorithm     = cert.public_key_algorithm_oid._name,
-        is_ca                    = is_ca,
-        crl_distribution_points  = cdp,
-        subject_key_id           = ski,
-        authority_key_id         = aki
+        version=cert.version.value,
+        serial_number=str(cert.serial_number),
+        subject_common_name=sub_cn,
+        issuer_common_name=iss_cn,
+        not_before=cert.not_valid_before_utc.isoformat(),
+        not_after=cert.not_valid_after_utc.isoformat(),
+        key_usage=key_usage,
+        ext_key_usage=eku,
+        signature_algorithm=cert.signature_algorithm_oid._name,
+        public_key_algorithm=cert.public_key_algorithm_oid._name,
+        is_ca=is_ca,
+        crl_distribution_points=cdp,
+        subject_key_id=ski,
+        authority_key_id=aki
     )
 
     return Entity(asset=cert)
+
 
 def load_certificate(cert_bytes: bytes) -> tuple[x509.Certificate, str]:
     try:
@@ -208,6 +211,7 @@ def load_certificate(cert_bytes: bytes) -> tuple[x509.Certificate, str]:
 
     raise ValueError("Input is not a valid PEM or DER X.509 certificate")
 
+
 def _get_entity(o: Entity | T, asset_type: AssetType) -> Entity:
     asset_cls = get_asset_by_type(asset_type)
     if isinstance(o, asset_cls):
@@ -216,119 +220,161 @@ def _get_entity(o: Entity | T, asset_type: AssetType) -> Entity:
         return o
     else:
         raise ValueError(f"param must be a '{asset_type}' or a derived entity")
-    
-def _store(ctx: Context, a: Entity | A, a_type: AssetType, b: Entity | B, b_type: AssetType, rel: Relation) -> tuple[Entity, Edge, Entity]:
-    a_entity = ctx.db.create_entity(_get_entity(a, a_type))
-    b_entity = ctx.db.create_entity(_get_entity(b, b_type))
-    rel = ctx.db.create_relation(rel, a_entity, b_entity)
+
+
+def _store(
+        store: Repository,
+        a: Entity | A,
+        a_type: AssetType,
+        b: Entity | B,
+        b_type: AssetType,
+        rel: Relation
+) -> tuple[Entity, Edge, Entity]:
+    a_entity = store.create_entity(_get_entity(a, a_type))
+    b_entity = store.create_entity(_get_entity(b, b_type))
+    rel = store.create_relation(rel, a_entity, b_entity)
     return (a_entity, rel, b_entity)
-    
+
 # STORES ---
 
+
 def store_cert_common_name(
-        ctx: Context,
+        store: Repository,
         cert: Entity | TLSCertificate,
         fqdn: Entity | FQDN
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(ctx,
-                  cert, AssetType.TLSCertificate,
-                  fqdn, AssetType.FQDN,
-                  SimpleRelation("common_name"))
+    return _store(
+        store,
+        cert, AssetType.TLSCertificate,
+        fqdn, AssetType.FQDN,
+        SimpleRelation("common_name"))
 
-def store_domain_verified_for_org(ctx: Context, fqdn: Entity | FQDN, org: Entity | Organization) -> tuple[Entity, Edge, Entity]:
-    return _store(ctx,
-                  fqdn, AssetType.FQDN,
-                  org, AssetType.Organization,
-                  SimpleRelation("verified_for"))
 
-def store_cert_authority_org(ctx: Context, cert: Entity | TLSCertificate, org: Entity | Organization) -> tuple[Entity, Edge, Entity]:
-    return _store(ctx,
-                  cert, AssetType.TLSCertificate,
-                  org, AssetType.Organization,
-                  SimpleRelation("certificate_authority"))
+def store_domain_verified_for_org(
+        store: Repository,
+        fqdn: Entity | FQDN,
+        org: Entity | Organization
+) -> tuple[Entity, Edge, Entity]:
+    return _store(
+        store,
+        fqdn, AssetType.FQDN,
+        org, AssetType.Organization,
+        SimpleRelation("verified_for"))
 
-def store_org_org_unit_org(ctx: Context, org: Entity | Organization, org_unit: Entity | Organization) -> tuple[Entity, Edge, Entity]:
-    return _store(ctx,
-                  org, AssetType.Organization,
-                  org_unit, AssetType.Organization,
-                  SimpleRelation("org_unit"))
+
+def store_cert_authority_org(
+        store: Repository,
+        cert: Entity | TLSCertificate,
+        org: Entity | Organization
+) -> tuple[Entity, Edge, Entity]:
+    return _store(
+        store,
+        cert, AssetType.TLSCertificate,
+        org, AssetType.Organization,
+        SimpleRelation("certificate_authority"))
+
+
+def store_org_org_unit_org(
+        store: Repository,
+        org: Entity | Organization,
+        org_unit: Entity | Organization
+) -> tuple[Entity, Edge, Entity]:
+    return _store(
+        store,
+        org, AssetType.Organization,
+        org_unit, AssetType.Organization,
+        SimpleRelation("org_unit"))
+
 
 def store_cert_san_dns_name(
-        ctx: Context,
+        store: Repository,
         cert: Entity | TLSCertificate,
         fqdn: Entity | FQDN
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(ctx,
-                  cert, AssetType.TLSCertificate,
-                  fqdn, AssetType.FQDN,
-                  SimpleRelation("san_dns_name"))
+    return _store(
+        store,
+        cert, AssetType.TLSCertificate,
+        fqdn, AssetType.FQDN,
+        SimpleRelation("san_dns_name"))
+
 
 def store_cert_san_address(
-        ctx: Context,
+        store: Repository,
         cert: Entity | TLSCertificate,
         addr: Entity | IPAddress
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(ctx,
-                  cert, AssetType.TLSCertificate,
-                  addr, AssetType.IPAddress,
-                  SimpleRelation("san_ip_address"))
+    return _store(
+        store,
+        cert, AssetType.TLSCertificate,
+        addr, AssetType.IPAddress,
+        SimpleRelation("san_ip_address"))
+
 
 def store_cert_san_email(
-        ctx: Context,
+        store: Repository,
         cert: Entity | TLSCertificate,
         email: Entity | Identifier
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(ctx,
-                  cert, AssetType.TLSCertificate,
-                  email, AssetType.Identifier,
-                  SimpleRelation("san_email_address"))
+    return _store(
+        store,
+        cert, AssetType.TLSCertificate,
+        email, AssetType.Identifier,
+        SimpleRelation("san_email_address"))
+
 
 def store_cert_san_url(
-        ctx: Context,
+        store: Repository,
         cert: Entity | TLSCertificate,
         url: Entity | URL
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(ctx,
-                  cert, AssetType.TLSCertificate,
-                  url, AssetType.URL,
-                  SimpleRelation("san_url"))
+    return _store(
+        store,
+        cert, AssetType.TLSCertificate,
+        url, AssetType.URL,
+        SimpleRelation("san_url"))
+
 
 def store_cert_ocsp_server_url(
-        ctx: Context,
+        store: Repository,
         cert: Entity | TLSCertificate,
         url: Entity | URL
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(ctx,
-                  cert, AssetType.TLSCertificate,
-                  url, AssetType.URL,
-                  SimpleRelation("ocsp_server"))
+    return _store(
+        store,
+        cert, AssetType.TLSCertificate,
+        url, AssetType.URL,
+        SimpleRelation("ocsp_server"))
+
 
 def store_cert_issuing_certificate_url(
-        ctx: Context,
+        store: Repository,
         cert: Entity | TLSCertificate,
         url: Entity | URL
 ) -> tuple[Entity, Edge, Entity]:
-        return _store(ctx,
-                  cert, AssetType.TLSCertificate,
-                  url, AssetType.URL,
-                  SimpleRelation("issuing_certificate_url"))
+    return _store(
+        store,
+        cert, AssetType.TLSCertificate,
+        url, AssetType.URL,
+        SimpleRelation("issuing_certificate_url"))
 
 # HANDLERS ---
+
 
 def handle_CN_subject(cert: Certificate) -> list[FQDN]:
     common_names = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
     if len(common_names) == 0:
         return []
 
-    l = []
+    fqdns = []
     for cn in common_names:
         try:
-            fqdn = FQDN.from_text(name.value)
-            l.append(fqdn)
-        except:
+            fqdn = FQDN.from_text(cn.value)
+            fqdns.append(fqdn)
+        except Exception:
             continue
-        
-    return l
+
+    return fqdns
+
 
 def handle_O_subject(cert: Certificate) -> list[Organization]:
     org_names = cert.subject.get_attributes_for_oid(NameOID.ORGANIZATION_NAME)
@@ -336,6 +382,7 @@ def handle_O_subject(cert: Certificate) -> list[Organization]:
         return []
 
     return [Organization(name.value, name.value) for name in org_names]
+
 
 def handle_OU_subject(cert: Certificate) -> list[Organization]:
     ou_names = cert.subject.get_attributes_for_oid(NameOID.ORGANIZATIONAL_UNIT_NAME)

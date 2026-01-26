@@ -1,0 +1,17 @@
+{ "pattern": "^cursor-domain-verification", "id": "cursor", "name": "Cursor", "type": "Software" }
+{ "pattern": "^docker-verification", "id": "docker", "name": "Docker", "type": "Software" }
+{ "pattern": "^airtable-verification", "id": "airtable", "name": "Airtable", "type": "Software" }
+{ "pattern": "^apple-domain-verification", "id": "apple_business_connect", "name": "Apple Business Connect", "type": "Service" }
+{ "pattern": "^globalsign-domain-verification", "id": "globalsign", "name": "GlobalSign", "type": "Service" }
+{ "pattern": "^google-site-verification", "id": "google_search_console", "name": "Google Search Console", "type": "Service" }
+{ "pattern": "^atlassian-domain-verification", "id": "atlassian", "name": "Atlassian", "type": "Software" }
+{ "pattern": "^anthropic-domain-verification", "id": "anthropic", "name": "Anthropic", "type": "Service" }
+{ "pattern": "^openai-domain-verification", "id": "openai", "name": "OpenAI", "type": "Service" }
+{ "pattern": "^perplexity-ai-domain-verification", "id": "perplexity_ai", "name": "Perplexity AI", "type": "Service" }
+{ "pattern": "^elevenlabs", "id": "elevenlabs", "name": "ElevenLabs", "type": "Service" }
+{ "pattern": "^logmein-verification-code", "id": "logmein", "name": "LogMeIn", "type": "Software" }
+{ "pattern": "^onetrust-domain-verification", "id": "onetrust", "name": "OneTrust", "type": "Service" }
+{ "pattern": "^teamviewer-sso-verification", "id": "teamviewer", "name": "TeamViewer", "type": "Software" }
+{ "pattern": "^wiz-domain-verification", "id": "wiz", "name": "Wiz", "type": "Service" }
+{ "pattern": "^contractworksverify", "id": "contractworks", "name": "ContractWorks", "type": "Software" }
+{ "pattern": "^MS", "id": "microsoft", "name": "Microsoft", "type": "Service" }

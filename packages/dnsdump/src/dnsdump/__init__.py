@@ -1,6 +1,1 @@
-from .dnsdump import (
-    DNSDump,
-    DNSDumpAnswer,
-    DNSDumpNoAnswer,
-    DNSDumpQueryFail
-)
+__title__ = "dnsdump"

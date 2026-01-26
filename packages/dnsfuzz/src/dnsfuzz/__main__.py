@@ -1,25 +1,57 @@
+import common.cli_setup  # noqa: F401
+
 import sys
-from argparse import ArgumentParser
 import asyncio
-from graphrecon_lib import Context
-import signal
-from dnsfuzz import DNSFuzz
+from argparse import ArgumentParser
+from asset_store.repository.neo4j import NeoRepository
+from termcolor import colored
+
+from common.output import print_error
+from .service import FuzzDNSCommand
 
 
-def sigint_handler(sig: int, _):
-    print("exited by user")
-    sys.exit(1)
+def success_handler(
+        domain: str,
+        nocolor: bool = False,
+        verbose: bool = False,
+        silent: bool = False
+):
+    if silent:
+        return
+
+    prefix = ""
+    if verbose:
+        prefix = "FOUND: "
+        if not nocolor:
+            prefix = colored(prefix, 'blue', attrs=['bold'])
+
+    if not nocolor:
+        message = colored(domain, 'blue')
+    else:
+        message = domain
+
+    print(prefix + message)
 
 
-signal.signal(signal.SIGINT, sigint_handler)
+def failure_handler(
+        domain: str,
+        nocolor: bool = False,
+        verbose: bool = False,
+        silent: bool = False
+):
+    if not verbose:
+        return
 
+    prefix = "TRY: "
+    if not nocolor:
+        prefix = colored(prefix, 'light_grey', attrs=['bold'])
 
-def success_handler(domain: str):
-    print(f"Found: {domain}")
+    if not nocolor:
+        message = colored(domain, 'light_grey')
+    else:
+        message = domain
 
-
-def failure_handler(domain: str):
-    print(f"Try: {domain}")
+    print(prefix + message)
 
 
 async def __async_main():
@@ -27,35 +59,73 @@ async def __async_main():
         prog="dnsfuzz",
         description="A parrallel bruteforce program")
     parser.add_argument(
-        "-w", "--wordlist", help="path to wordlist", required=True)
+        "-w", "--wordlist", help="path to wordlist",
+        required=True)
     parser.add_argument(
-        "-d", "--domain", help="target domain", required=True)
+        "-d", "--domain", help="target domain",
+        required=True)
     parser.add_argument(
-        "-v", "--verbose", help="show tries", action="store_true")
+        "-r", "--resolv", help="Path to the resolver configuration file",
+        default="./resolve.conf")
     parser.add_argument(
-        "-B", "--batch-size", help="number of requests send simultaneously", type=int, default=10)
+        "-rb", "--batch-size", help="rate limiter batch size",
+        type=int, default=10)
     parser.add_argument(
-        "-D", "--delay", help="delay between each batch (in ms)", type=int, default=300)
+        "-rd", "--delay", help="rate limiter delay between batches (in ms)",
+        type=int, default=300)
+    parser.add_argument(
+        "--nocolor", help="disable colored output",
+        action="store_true")
+    parser.add_argument(
+        "--nostore", help="disable asset store",
+        action="store_true")
 
-    with Context.from_argument_parser(parser) as ctx:
+    output_group = parser.add_mutually_exclusive_group()
+
+    output_group.add_argument(
+        "-v", "--verbose", help="show tries",
+        action="store_true")
+    output_group.add_argument(
+        "-s", "--silent", help="disable outputs",
+        action="store_true")
+
+    config = parser.parse_args()
+
+    try:
+        store = NeoRepository("neo4j://localhost", ("neo4j", "password"))
+    except Exception as e:
+        print_error(e, config.nocolor)
+        sys.exit(1)
+
+    with store:
         try:
-            fuzzer = DNSFuzz(
-                domain=ctx.config.domain,
-                wordlist=ctx.config.wordlist,
-                rate_limiter_delay=ctx.config.delay,
-                rate_limiter_batch=ctx.config.batch_size,
-                on_success=success_handler,
-                on_failure=failure_handler
+            fuzzer = FuzzDNSCommand(
+                domain=config.domain,
+                wordlist=config.wordlist,
+                on_success=(lambda d: success_handler(
+                    d, config.nocolor,
+                    config.verbose,
+                    config.silent)),
+                on_failure=(lambda d: failure_handler(
+                    d, config.nocolor,
+                    config.verbose,
+                    config.silent)),
+                resolv=config.resolv,
+                store=store,
+                ratelimiter_batch=config.batch_size,
+                ratelimiter_delay=config.delay,
+                disable_store=config.nostore
             )
         except Exception as e:
-            print(e)
+            print_error(e)
             sys.exit(1)
 
-        tasks: list[asyncio.Task] = []
-        async for sub in fuzzer.fuzz(ctx):
-            tasks.append(sub)
-        asyncio.gather(*tasks)
+        await fuzzer.run()
 
 
 def main():
     asyncio.run(__async_main())
+
+
+if __name__ == "__main__":
+    main()

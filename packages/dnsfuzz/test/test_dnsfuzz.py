@@ -1,3 +1,0 @@
-from dnsfuzz import *
-
-

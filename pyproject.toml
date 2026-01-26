@@ -4,11 +4,6 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "certdump",
-    "dnsdump",
-    "graphrecon-lib",
-]
 
 [dependency-groups]
 dev = [
@@ -19,7 +14,6 @@ dev = [
 [tool.uv.sources]
 open-asset-model = { git = "https://github.com/0ppliger/open-asset-model.py.git", branch = "master" }
 open-asset-store = { git = "https://github.com/0ppliger/open-asset-store.py.git", branch = "master" }
-graphrecon-lib = { workspace = true }
 dnsdump = { workspace = true }
 certdump = { workspace = true }
 
