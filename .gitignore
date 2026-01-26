@@ -1,5 +1,6 @@
 *.org
 *.env
+*wordlist.txt
 
 # Python-generated files
 __pycache__/
@@ -12,3 +13,12 @@ wheels/
 # Virtual environments
 .venv
 
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
