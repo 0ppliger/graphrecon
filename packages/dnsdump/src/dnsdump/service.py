@@ -2,7 +2,7 @@ from dns import name
 from dns.rdata import Rdata
 from dns.resolver import Resolver
 from dns.exception import DNSException
-from asset_store.repository.repository import Repository
+from oam_client import BrokerClient
 from typing import Callable
 
 from asset_model import FQDN
@@ -18,7 +18,7 @@ class DumpDNSCommand:
     IS_ASYNC: bool = False
 
     dump:  DumpDNSGenerator
-    store: Repository
+    store: BrokerClient
     ratelimiter: RateLimiter
     on_success: Callable[[str, Rdata], None]
     on_failure: Callable[[str], None]
@@ -26,7 +26,7 @@ class DumpDNSCommand:
     def __init__(
         self,
         domain: str,
-        store: Repository,
+        store: BrokerClient,
         on_success: Callable[[str, Rdata], None],
         on_failure: Callable[[str], None],
         ratelimiter_delay: int = 300,
@@ -47,7 +47,7 @@ class DumpDNSCommand:
 
         self.store = store
 
-        base = self.store.create_asset(FQDN(_domain.to_text(True)))
+        base = self.store.create_entity(FQDN(_domain.to_text(True)))
 
         def success_handler(rdtype: str, rdata: Rdata):
             data = dispatch(self.store, base, rdtype, rdata)

@@ -6,7 +6,7 @@ from argparse import ArgumentParser
 from termcolor import colored
 from pygments import highlight, lexers, formatters
 
-from asset_store.repository.neo4j import NeoRepository
+from oam_client import BrokerClient
 from .service import DumpDNSCommand
 
 from common.output import print_error
@@ -110,7 +110,7 @@ def main():
     config = parser.parse_args()
 
     try:
-        store = NeoRepository("neo4j://localhost", ("neo4j", "password"))
+        store = BrokerClient("https://localhost", verify=False)
     except Exception as e:
         print_error(e, config.nocolor, config.silent)
         sys.exit(1)
@@ -121,22 +121,21 @@ def main():
     def failure_handler(rdtype: str):
         display_fail(rdtype, config.nocolor, config.silent, config.verbose)
 
-    with store:
-        try:
-            cmd = DumpDNSCommand(
-                domain=config.domain,
-                resolv=config.resolv,
-                store=store,
-                on_success=success_handler,
-                on_failure=failure_handler,
-                ratelimiter_batch=config.batch_size,
-                ratelimiter_delay=config.delay,
-            )
-        except Exception as e:
-            print_error(e, config.nocolor, config.silent)
-            sys.exit(1)
+    try:
+        cmd = DumpDNSCommand(
+            domain=config.domain,
+            resolv=config.resolv,
+            store=store,
+            on_success=success_handler,
+            on_failure=failure_handler,
+            ratelimiter_batch=config.batch_size,
+            ratelimiter_delay=config.delay,
+        )
+    except Exception as e:
+        print_error(e, config.nocolor, config.silent)
+        sys.exit(1)
 
-        cmd.run()
+    cmd.run()
 
 
 if __name__ == "__main__":

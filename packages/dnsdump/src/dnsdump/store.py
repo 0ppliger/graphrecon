@@ -1,4 +1,4 @@
-from typing import Optional, Type, Callable
+from typing import Type, Callable
 from dns.rdata import Rdata
 import dns.rdtypes.IN.A
 import dns.rdtypes.IN.AAAA
@@ -11,32 +11,32 @@ import dns.rdtypes.IN.SRV
 from asset_model import IPAddress, IPAddressType
 from asset_model import FQDN
 from asset_model import Identifier, IdentifierType
-from asset_model import BasicDNSRelation
+from asset_model import BasicDNSRelation, RRHeader
 from asset_model import PrefDNSRelation
 from asset_model import SourceProperty
 from asset_model import DNSRecordProperty
-from asset_store.repository.repository import Repository
-from asset_store.types import Entity, Edge
-from asset_store.events.events import Event
+
+from oam_client import BrokerClient
+from oam_client.messages import Entity, Edge, EntityTag, EdgeTag
 
 from . import __title__
 
-HandlerCallback = Callable[[Repository, Entity, str, dns.rdata.Rdata], dict]
+HandlerCallback = Callable[[BrokerClient, Entity, str, dns.rdata.Rdata], dict]
 
 handlers: dict[Type[dns.rdata.Rdata], HandlerCallback] = {}
 
 
-def add_source(store: Repository, o: Entity | Edge) -> Optional[Event]:
+def add_source(store: BrokerClient, o: Entity | Edge) -> EntityTag | EdgeTag:
     if type(o) is Entity:
-        return store.create_entity_property(
-            o, SourceProperty(source=__title__, confidence=100))
+        return store.create_entity_tag(
+            SourceProperty(source=__title__, confidence=100), o.id)
     if type(o) is Edge:
-        return store.create_edge_property(
-            o, SourceProperty(source=__title__, confidence=100))
+        return store.create_edge_tag(
+            SourceProperty(source=__title__, confidence=100), o.id)
 
 
 def dispatch(
-        store: Repository,
+        store: BrokerClient,
         base: Entity,
         rdtype: str,
         rdata: Rdata
@@ -48,21 +48,22 @@ def dispatch(
 
 
 def handle_default(
-        store: Repository,
+        store: BrokerClient,
         base: Entity,
         rdtype: str,
         rdata: Rdata
-) -> list[Event]:
+) -> dict:
     data = {"value": rdata.to_text()}
 
-    store.create_entity_property(
-        base,
+    store.create_entity_tag(
         DNSRecordProperty(
             "dns_record",
             data["value"],
-            rrtype=rdata.rdtype,
-            rrname=rdtype
-        ))
+            header=RRHeader(
+                rrtype=rdata.rdtype,
+                rrname=rdtype
+            )),
+        base.id)
 
     return data
 
@@ -77,16 +78,18 @@ def handle(rdtype: Type[dns.rdata.Rdata]):
 @handle(dns.rdtypes.IN.A.A)
 def handle_a(store, base, rdtype, rdata):
     data = IPAddress(rdata.address, IPAddressType.IPv4)
-    ip = store.create_asset(data)
+    ip = store.create_entity(data)
     add_source(store, ip)
 
-    rel = store.create_relation(
+    rel = store.create_edge(
         BasicDNSRelation(
             "dns_record",
-            rdata.rdtype,
-            rrname=rdtype),
-        base,
-        ip)
+            header=RRHeader(
+                rrtype=rdata.rdtype,
+                rrname=rdtype,
+            )),
+        base.id,
+        ip.id)
     add_source(store, rel)
     return data.to_dict()
 
@@ -94,15 +97,18 @@ def handle_a(store, base, rdtype, rdata):
 @handle(dns.rdtypes.IN.AAAA.AAAA)
 def handle_aaaa(store, base, rdtype, rdata):
     data = IPAddress(rdata.address, IPAddressType.IPv6)
-    ip_entity = store.create_asset(data)
+    ip_entity = store.create_entity(data)
     add_source(store, ip_entity)
 
-    rel = store.create_relation(
+    rel = store.create_edge(
         BasicDNSRelation(
-            "dns_record", rdata.rdtype,
-            rrname=rdtype),
-        base,
-        ip_entity)
+            "dns_record",
+            header=RRHeader(
+                rrtype=rdata.rdtype,
+                rrname=rdtype,
+            )),
+        base.id,
+        ip_entity.id)
     add_source(store, rel)
     return data.to_dict()
 
@@ -110,15 +116,18 @@ def handle_aaaa(store, base, rdtype, rdata):
 @handle(dns.rdtypes.ANY.CNAME.CNAME)
 def handle_cname(store, base, rdtype, rdata):
     data = FQDN(rdata.target.to_text(True))
-    fqdn_entity = store.create_asset(data)
+    fqdn_entity = store.create_entity(data)
     add_source(store, fqdn_entity)
 
-    rel = store.create_relation(
+    rel = store.create_edge(
         BasicDNSRelation(
-            "dns_record", rdata.rdtype,
-            rrname=rdtype),
-        base,
-        fqdn_entity)
+            "dns_record",
+            header=RRHeader(
+                rrtype=rdata.rdtype,
+                rrname=rdtype,
+            )),
+        base.id,
+        fqdn_entity.id)
     add_source(store, rel)
     return data.to_dict()
 
@@ -126,15 +135,18 @@ def handle_cname(store, base, rdtype, rdata):
 @handle(dns.rdtypes.ANY.NS.NS)
 def handle_ns(store, base, rdtype, rdata):
     data = FQDN(rdata.target.to_text(True))
-    fqdn_entity = store.create_asset(data)
+    fqdn_entity = store.create_entity(data)
     add_source(store, fqdn_entity)
 
-    rel = store.create_relation(
+    rel = store.create_edge(
         BasicDNSRelation(
-            "dns_record", rdata.rdtype,
-            rrname=rdtype),
-        base,
-        fqdn_entity)
+            "dns_record",
+            header=RRHeader(
+                rrtype=rdata.rdtype,
+                rrname=rdtype,
+            )),
+        base.id,
+        fqdn_entity.id)
     add_source(store, rel)
     return data.to_dict()
 
@@ -152,7 +164,7 @@ def handle_soa(store, base, rdtype, rdata):
 
     mname_value = rdata.mname.to_text(True)
     mname = FQDN(mname_value)
-    mname_entity = store.create_asset(mname)
+    mname_entity = store.create_entity(mname)
     add_source(store, mname_entity)
 
     rname_value = rname_to_email(rdata.rname.to_text(True))
@@ -160,37 +172,29 @@ def handle_soa(store, base, rdtype, rdata):
         rname_value,
         rname_value,
         type=IdentifierType.EmailAddress)
-    rname_entity = store.create_asset(rname)
+    rname_entity = store.create_entity(rname)
     add_source(store, rname_entity)
 
-    extra = {
-        "mname": mname_value,
-        "rname": rname_value,
-        "serial": rdata.serial,
-        "refresh": rdata.refresh,
-        "retry": rdata.retry,
-        "expire": rdata.expire,
-        "minimum": rdata.minimum
-    }
-
-    mname_rel = store.create_relation(
+    mname_rel = store.create_edge(
         BasicDNSRelation(
             "dns_record",
-            rdata.rdtype,
-            rrname=rdtype,
-            extra=extra),
-        base,
-        mname_entity)
+            header=RRHeader(
+                rrtype=rdata.rdtype,
+                rrname=rdtype,
+            )),
+        base.id,
+        mname_entity.id)
     add_source(store, mname_rel)
 
-    rname_rel = store.create_relation(
+    rname_rel = store.create_edge(
         BasicDNSRelation(
             "dns_record",
-            rdata.rdtype,
-            rrname=rdtype,
-            extra=extra),
-        base,
-        rname_entity)
+            header=RRHeader(
+                rrtype=rdata.rdtype,
+                rrname=rdtype,
+            )),
+        base.id,
+        rname_entity.id)
     add_source(store, rname_rel)
 
     return data
@@ -199,17 +203,19 @@ def handle_soa(store, base, rdtype, rdata):
 @handle(dns.rdtypes.ANY.MX.MX)
 def handle_mx(store, base, rdtype, rdata):
     data = FQDN(rdata.exchange.to_text(True))
-    fqdn_entity = store.create_asset(data)
+    fqdn_entity = store.create_entity(data)
     add_source(store, fqdn_entity)
 
-    rel = store.create_relation(
+    rel = store.create_edge(
         PrefDNSRelation(
             "dns_record",
             preference=rdata.preference,
-            rrtype=rdata.rdtype,
-            rrname=rdtype),
-        base,
-        fqdn_entity)
+            header=RRHeader(
+                rrtype=rdata.rdtype,
+                rrname=rdtype,
+            )),
+        base.id,
+        fqdn_entity.id)
     add_source(store, rel)
     return data.to_dict()
 
@@ -218,14 +224,16 @@ def handle_mx(store, base, rdtype, rdata):
 def handle_txt(store, base, rdtype, rdata):
     data = {"value": ''.join([s.decode('utf-8') for s in rdata.strings])}
 
-    prop = store.create_entity_property(
-        base,
+    prop = store.create_entity_tag(
         DNSRecordProperty(
             "dns_record",
             data["value"],
-            rrtype=rdata.rdtype,
-            rrname=rdtype
-        ))
+            header=RRHeader(
+                rrtype=rdata.rdtype,
+                rrname=rdtype,
+            )
+        ),
+        base.id)
     add_source(store, prop)
     return data
 
@@ -234,12 +242,13 @@ def handle_txt(store, base, rdtype, rdata):
 def handle_srv(store, base, rdtype, rdata):
     data = {"value": ''.join([s.decode('utf-8') for s in rdata.strings])}
 
-    store.create_entity_property(
-        base,
+    store.create_entity_tag(
         DNSRecordProperty(
             "dns_record",
             data["value"],
-            rrtype=rdata.rdtype,
-            rrname=rdtype
-        ))
+            header=RRHeader(
+                rrtype=rdata.rdtype,
+                rrname=rdtype,
+            )),
+        base.id)
     return data
