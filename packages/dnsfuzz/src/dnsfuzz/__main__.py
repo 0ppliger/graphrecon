@@ -3,7 +3,7 @@ import common.cli_setup  # noqa: F401
 import sys
 import asyncio
 from argparse import ArgumentParser
-from asset_store.repository.neo4j import NeoRepository
+from oam_client import BrokerClient
 from termcolor import colored
 
 from common.output import print_error
@@ -92,35 +92,34 @@ async def __async_main():
     config = parser.parse_args()
 
     try:
-        store = NeoRepository("neo4j://localhost", ("neo4j", "password"))
+        store = BrokerClient("https://localhost", verify=False)
     except Exception as e:
         print_error(e, config.nocolor)
         sys.exit(1)
 
-    with store:
-        try:
-            fuzzer = FuzzDNSCommand(
-                domain=config.domain,
-                wordlist=config.wordlist,
-                on_success=(lambda d: success_handler(
-                    d, config.nocolor,
-                    config.verbose,
-                    config.silent)),
-                on_failure=(lambda d: failure_handler(
-                    d, config.nocolor,
-                    config.verbose,
-                    config.silent)),
-                resolv=config.resolv,
-                store=store,
-                ratelimiter_batch=config.batch_size,
-                ratelimiter_delay=config.delay,
-                disable_store=config.nostore
-            )
-        except Exception as e:
-            print_error(e)
-            sys.exit(1)
+    try:
+        fuzzer = FuzzDNSCommand(
+            domain=config.domain,
+            wordlist=config.wordlist,
+            on_success=(lambda d: success_handler(
+                d, config.nocolor,
+                config.verbose,
+                config.silent)),
+            on_failure=(lambda d: failure_handler(
+                d, config.nocolor,
+                config.verbose,
+                config.silent)),
+            resolv=config.resolv,
+            store=store,
+            ratelimiter_batch=config.batch_size,
+            ratelimiter_delay=config.delay,
+            disable_store=config.nostore
+        )
+    except Exception as e:
+        print_error(e)
+        sys.exit(1)
 
-        await fuzzer.run()
+    await fuzzer.run()
 
 
 def main():

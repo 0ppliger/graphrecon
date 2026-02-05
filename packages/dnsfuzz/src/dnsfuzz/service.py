@@ -1,7 +1,7 @@
 from dns import name
 from typing import Callable
 from asyncio import Task, gather
-from asset_store.repository.repository import Repository
+from oam_client import BrokerClient
 from dns.exception import DNSException
 from dns.asyncresolver import Resolver as AsyncResolver
 from dns.resolver import Resolver as SyncResolver
@@ -25,7 +25,7 @@ class FuzzDNSCommand:
 
     core: DNSFuzz
     ratelimiter: RateLimiter
-    store: Repository
+    store: BrokerClient
 
     def __init__(
             self,
@@ -33,7 +33,7 @@ class FuzzDNSCommand:
             wordlist: str,
             on_success: Callable[[str], None],
             on_failure: Callable[[str], None],
-            store: Repository,
+            store: BrokerClient,
             ratelimiter_delay: int = 300,
             ratelimiter_batch: int = 5,
             disable_store: bool = False,

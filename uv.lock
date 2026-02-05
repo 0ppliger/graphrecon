@@ -234,8 +234,8 @@ dependencies = [
     { name = "apex" },
     { name = "common" },
     { name = "dnspython" },
+    { name = "oam-client" },
     { name = "open-asset-model" },
-    { name = "open-asset-store" },
     { name = "pyrate-limiter" },
     { name = "termcolor" },
 ]
@@ -245,8 +245,8 @@ requires-dist = [
     { name = "apex", editable = "packages/apex" },
     { name = "common", editable = "packages/common" },
     { name = "dnspython", specifier = ">=2.8.0" },
+    { name = "oam-client", git = "https://github.com/0ppliger/oam-client.py.git?branch=master" },
     { name = "open-asset-model", git = "https://github.com/0ppliger/open-asset-model.py.git?branch=master" },
-    { name = "open-asset-store", git = "https://github.com/0ppliger/open-asset-store.py.git?branch=master" },
     { name = "pyrate-limiter", specifier = ">=4.0.2" },
     { name = "termcolor", specifier = ">=3.3.0" },
 ]
@@ -273,6 +273,9 @@ wheels = [
 name = "graphrecon"
 version = "0.1.0"
 source = { virtual = "." }
+dependencies = [
+    { name = "oam-client" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -281,6 +284,7 @@ dev = [
 ]
 
 [package.metadata]
+requires-dist = [{ name = "oam-client", specifier = ">=0.1.0" }]
 
 [package.metadata.requires-dev]
 dev = [

@@ -11,8 +11,8 @@ dependencies = [
     "apex",
     "common",
     "dnspython>=2.8.0",
+    "oam-client>=0.1.0",
     "open-asset-model>=1.1.1",
-    "open-asset-store>=0.0.2",
     "pyrate-limiter>=4.0.2",
     "termcolor>=3.3.0",
 ]
@@ -22,6 +22,7 @@ requires = ["uv_build>=0.9.22,<0.10.0"]
 build-backend = "uv_build"
 
 [tool.uv.sources]
+oam-client = { git = "https://github.com/0ppliger/oam-client.py.git", branch = "master" }
 common = { workspace = true }
 apex = { workspace = true }
 
