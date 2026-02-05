@@ -22,7 +22,6 @@ requires = ["uv_build>=0.9.22,<0.10.0"]
 build-backend = "uv_build"
 
 [tool.uv.sources]
-oam-client = { git = "https://github.com/0ppliger/oam-client.py.git", branch = "master" }
 common = { workspace = true }
 apex = { workspace = true }
 

@@ -3,8 +3,8 @@ from asset_model import URL
 from asset_model import IPAddress
 from asset_model import Identifier
 from asset_model import SimpleRelation
-from asset_store.types import Entity
-from asset_store.repository.repository import Repository
+from oam_client import BrokerClient
+from oam_client.messages import Entity
 from cryptography import x509
 from cryptography.x509.oid import ExtensionOID
 from cryptography.x509.oid import AuthorityInformationAccessOID
@@ -20,14 +20,14 @@ class DumpCertificateCommand:
     IS_ASYNC: bool = False
 
     domain: str
-    store: Repository
+    store: BrokerClient
     chain: list[x509.Certificate]
     on_success: Callable[[str, str], None]
 
     def __init__(
             self,
             domain: str,
-            store: Repository,
+            store: BrokerClient,
             on_success: Callable[[str, str], None]
     ):
         self.domain = domain
@@ -43,7 +43,7 @@ class DumpCertificateCommand:
         self.on_success = on_success
 
     def run(self):
-        base = self.store.create_asset(FQDN(self.domain))
+        base = self.store.create_entity(FQDN(self.domain))
 
         previous_cert = None
 
@@ -53,10 +53,10 @@ class DumpCertificateCommand:
                 lib.make_certificate_entity(cert))
 
             if previous_cert is not None:
-                self.store.create_relation(
+                self.store.create_edge(
                     SimpleRelation("issuing_certificate"),
-                    previous_cert,
-                    cert_entity)
+                    previous_cert.id,
+                    cert_entity.id)
 
             # handle CN subject
             CN_list = lib.handle_CN_subject(cert)

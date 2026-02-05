@@ -49,8 +49,8 @@ dependencies = [
     { name = "common" },
     { name = "cryptography" },
     { name = "fqdn" },
+    { name = "oam-client" },
     { name = "open-asset-model" },
-    { name = "open-asset-store" },
     { name = "termcolor" },
 ]
 
@@ -59,8 +59,8 @@ requires-dist = [
     { name = "common", editable = "packages/common" },
     { name = "cryptography", specifier = ">=46.0.3" },
     { name = "fqdn", specifier = ">=1.5.1" },
+    { name = "oam-client", git = "https://github.com/0ppliger/oam-client.py.git?branch=master" },
     { name = "open-asset-model", git = "https://github.com/0ppliger/open-asset-model.py.git?branch=master" },
-    { name = "open-asset-store", git = "https://github.com/0ppliger/open-asset-store.py.git?branch=master" },
     { name = "termcolor", specifier = ">=3.3.0" },
 ]
 
@@ -284,7 +284,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "oam-client", specifier = ">=0.1.0" }]
+requires-dist = [{ name = "oam-client", git = "https://github.com/0ppliger/oam-client.py.git?branch=master" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -416,7 +416,7 @@ wheels = [
 [[package]]
 name = "oam-client"
 version = "0.1.0"
-source = { git = "https://github.com/0ppliger/oam-client.py.git?branch=master#79d1a7f393d23af7c1e099876afa5c01f8b5a70e" }
+source = { git = "https://github.com/0ppliger/oam-client.py.git?branch=master#3ea009901d25d71188c1a538a2e178b775d707cb" }
 dependencies = [
     { name = "httpx", extra = ["http2"] },
     { name = "httpx-sse" },

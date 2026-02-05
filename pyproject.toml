@@ -17,6 +17,7 @@ dev = [
 [tool.uv.sources]
 open-asset-model = { git = "https://github.com/0ppliger/open-asset-model.py.git", branch = "master" }
 open-asset-store = { git = "https://github.com/0ppliger/open-asset-store.py.git", branch = "master" }
+oam-client = { git = "https://github.com/0ppliger/oam-client.py.git", branch = "master" }
 dnsdump = { workspace = true }
 certdump = { workspace = true }
 

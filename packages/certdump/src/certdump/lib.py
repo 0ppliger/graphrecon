@@ -8,7 +8,6 @@ from asset_model import AssetType, Asset
 from asset_model import Relation
 from asset_model import SimpleRelation
 from asset_model import get_asset_by_type
-from asset_store.types import Entity, Edge
 from typing import Type, TypeVar, Optional
 from cryptography import x509
 from cryptography.x509 import Certificate
@@ -17,8 +16,12 @@ from cryptography.x509.oid import NameOID
 from cryptography.x509.oid import ExtensionOID
 from cryptography.x509.oid import ExtendedKeyUsageOID
 from cryptography.x509 import ExtensionNotFound
-from asset_store.repository.repository import Repository
+from common.logger import getLogger
 
+from oam_client import BrokerClient
+from oam_client.messages import Entity, Edge
+
+logger = getLogger(__name__)
 
 T = TypeVar("T")
 A = TypeVar("A")
@@ -82,7 +85,7 @@ def make_info_access_entry(
     return None
 
 
-def make_certificate_entity(cert: Certificate) -> Entity:
+def make_certificate_entity(cert: Certificate) -> TLSCertificate:
     sub_attrs = cert.subject.get_attributes_for_oid(NameOID.COMMON_NAME)
     if len(sub_attrs) < 1:
         sub_cn = ""
@@ -178,8 +181,8 @@ def make_certificate_entity(cert: Certificate) -> Entity:
     except x509.ExtensionNotFound:
         aki = ""
 
-    cert = TLSCertificate(
-        version=cert.version.value,
+    return TLSCertificate(
+        version=str(cert.version.value),
         serial_number=str(cert.serial_number),
         subject_common_name=sub_cn,
         issuer_common_name=iss_cn,
@@ -194,8 +197,6 @@ def make_certificate_entity(cert: Certificate) -> Entity:
         subject_key_id=ski,
         authority_key_id=aki
     )
-
-    return Entity(asset=cert)
 
 
 def load_certificate(cert_bytes: bytes) -> tuple[x509.Certificate, str]:
@@ -215,7 +216,7 @@ def load_certificate(cert_bytes: bytes) -> tuple[x509.Certificate, str]:
 def _get_entity(o: Entity | T, asset_type: AssetType) -> Entity:
     asset_cls = get_asset_by_type(asset_type)
     if isinstance(o, asset_cls):
-        return Entity(asset=o)
+        return Entity(asset=o, type=o.asset_type)
     elif isinstance(o, Entity) and o.asset.asset_type == asset_type:
         return o
     else:
@@ -223,23 +224,24 @@ def _get_entity(o: Entity | T, asset_type: AssetType) -> Entity:
 
 
 def _store(
-        store: Repository,
+        store: BrokerClient,
         a: Entity | A,
         a_type: AssetType,
         b: Entity | B,
         b_type: AssetType,
         rel: Relation
 ) -> tuple[Entity, Edge, Entity]:
-    a_entity = store.create_entity(_get_entity(a, a_type))
-    b_entity = store.create_entity(_get_entity(b, b_type))
-    rel = store.create_relation(rel, a_entity, b_entity)
-    return (a_entity, rel, b_entity)
+    logger.info(a)
+    a_entity = store.create_entity(_get_entity(a, a_type).asset)
+    b_entity = store.create_entity(_get_entity(b, b_type).asset)
+    edge = store.create_edge(rel, a_entity.id, b_entity.id)
+    return (a_entity, edge, b_entity)
 
 # STORES ---
 
 
 def store_cert_common_name(
-        store: Repository,
+        store: BrokerClient,
         cert: Entity | TLSCertificate,
         fqdn: Entity | FQDN
 ) -> tuple[Entity, Edge, Entity]:
@@ -251,7 +253,7 @@ def store_cert_common_name(
 
 
 def store_domain_verified_for_org(
-        store: Repository,
+        store: BrokerClient,
         fqdn: Entity | FQDN,
         org: Entity | Organization
 ) -> tuple[Entity, Edge, Entity]:
@@ -263,7 +265,7 @@ def store_domain_verified_for_org(
 
 
 def store_cert_authority_org(
-        store: Repository,
+        store: BrokerClient,
         cert: Entity | TLSCertificate,
         org: Entity | Organization
 ) -> tuple[Entity, Edge, Entity]:
@@ -275,7 +277,7 @@ def store_cert_authority_org(
 
 
 def store_org_org_unit_org(
-        store: Repository,
+        store: BrokerClient,
         org: Entity | Organization,
         org_unit: Entity | Organization
 ) -> tuple[Entity, Edge, Entity]:
@@ -287,7 +289,7 @@ def store_org_org_unit_org(
 
 
 def store_cert_san_dns_name(
-        store: Repository,
+        store: BrokerClient,
         cert: Entity | TLSCertificate,
         fqdn: Entity | FQDN
 ) -> tuple[Entity, Edge, Entity]:
@@ -299,7 +301,7 @@ def store_cert_san_dns_name(
 
 
 def store_cert_san_address(
-        store: Repository,
+        store: BrokerClient,
         cert: Entity | TLSCertificate,
         addr: Entity | IPAddress
 ) -> tuple[Entity, Edge, Entity]:
@@ -311,7 +313,7 @@ def store_cert_san_address(
 
 
 def store_cert_san_email(
-        store: Repository,
+        store: BrokerClient,
         cert: Entity | TLSCertificate,
         email: Entity | Identifier
 ) -> tuple[Entity, Edge, Entity]:
@@ -323,7 +325,7 @@ def store_cert_san_email(
 
 
 def store_cert_san_url(
-        store: Repository,
+        store: BrokerClient,
         cert: Entity | TLSCertificate,
         url: Entity | URL
 ) -> tuple[Entity, Edge, Entity]:
@@ -335,7 +337,7 @@ def store_cert_san_url(
 
 
 def store_cert_ocsp_server_url(
-        store: Repository,
+        store: BrokerClient,
         cert: Entity | TLSCertificate,
         url: Entity | URL
 ) -> tuple[Entity, Edge, Entity]:
@@ -347,7 +349,7 @@ def store_cert_ocsp_server_url(
 
 
 def store_cert_issuing_certificate_url(
-        store: Repository,
+        store: BrokerClient,
         cert: Entity | TLSCertificate,
         url: Entity | URL
 ) -> tuple[Entity, Edge, Entity]:

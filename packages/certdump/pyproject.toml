@@ -11,8 +11,8 @@ dependencies = [
     "common",
     "cryptography>=46.0.3",
     "fqdn>=1.5.1",
+    "oam-client>=0.1.0",
     "open-asset-model>=1.1.1",
-    "open-asset-store>=0.0.2",
     "termcolor>=3.3.0",
 ]
 

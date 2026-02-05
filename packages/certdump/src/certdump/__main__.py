@@ -4,10 +4,11 @@ import common.cli_setup  # noqa: F401
 # - TLSCertificate -[subject_contact]-> ContactRecord
 # - TLSCertificate -[issuer_contact]-> ContactRecord
 
+import sys
 from argparse import ArgumentParser
-from asset_store.repository.neo4j import NeoRepository
+from oam_client import BrokerClient
 from termcolor import colored
-
+from common.output import print_error
 from .service import DumpCertificateCommand
 
 
@@ -26,16 +27,19 @@ def main():
 
     config = parser.parse_args()
 
-    store = NeoRepository("neo4j://localhost", ("neo4j", "password"))
+    try:
+        store = BrokerClient("https://localhost", verify=False)
+    except Exception as e:
+        print_error(e, config.nocolor, config.silent)
+        sys.exit(1)
 
-    with store:
-        cmd = DumpCertificateCommand(
-            config.domain,
-            store,
-            on_success=lambda t, o: print_success(t, o)
-        )
+    cmd = DumpCertificateCommand(
+        config.domain,
+        store,
+        on_success=lambda t, o: print_success(t, o)
+    )
 
-        cmd.run()
+    cmd.run()
 
 
 if __name__ == "__main__":
