@@ -1,9 +1,18 @@
 import os
 import logging
 
-LOGLEVEL = os.getenv("LOGLEVEL", "WARNING").upper()
+if "GR_LOGLEVEL" in os.environ:
+    LOGLEVEL = os.environ["GR_LOGLEVEL"].upper()
+else:
+    LOGLEVEL = os.getenv("LOGLEVEL", "WARNING").upper()
+
+__loglevel = getattr(logging, LOGLEVEL, logging.WARNING)
 
 logging.basicConfig(
-    level=getattr(logging, LOGLEVEL, logging.WARNING))
+    level=__loglevel)
 
-getLogger = logging.getLogger
+
+def getLogger(name: str) -> logging.Logger:
+    logger = logging.getLogger(name)
+    logger.level = __loglevel
+    return logger
