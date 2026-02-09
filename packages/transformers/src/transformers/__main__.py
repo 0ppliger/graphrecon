@@ -1,6 +1,6 @@
 import asyncio
 from common.logger import getLogger
-from oam_client import AsyncBrokerClient, BrokerClient
+from oam_client import AsyncBrokerClient
 from oam_client.messages import Event, ServerAction
 from asset_model import AssetType
 from dnsdump.service import DumpDNSCommand
@@ -21,14 +21,12 @@ class BrokerHandler:
         if event.action == ServerAction.EntityCreated \
            and event.data.type == AssetType.FQDN:
             try:
-                cmd = DumpDNSCommand(
+                await DumpDNSCommand(
                     domain=event.data.asset.name,
                     store=self.client,
                     on_success=lambda rdtype, rdata: print("find:", rdtype, rdata),
-                    on_failure=lambda rdtype: print("fail:", rdtype),
-                )
-                print(cmd)
-                await cmd.run()
+                    on_failure=lambda rdtype: print("try:", rdtype),
+                ).run()
             except Exception as e:
                 print(e)
 
