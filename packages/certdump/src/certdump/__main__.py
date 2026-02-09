@@ -5,8 +5,9 @@ import common.cli_setup  # noqa: F401
 # - TLSCertificate -[issuer_contact]-> ContactRecord
 
 import sys
+import asyncio
 from argparse import ArgumentParser
-from oam_client import BrokerClient
+from oam_client import AsyncBrokerClient
 from termcolor import colored
 from common.output import print_error
 from .service import DumpCertificateCommand
@@ -16,7 +17,7 @@ def print_success(obj_type: str, obj: str):
     print(f"{colored(obj_type, 'blue', attrs=['bold'])}: {colored(obj, 'blue')}")
 
 
-def main():
+async def async_main():
     parser = ArgumentParser(
         description="Dump TLS certificate.",
         prog="certdump"
@@ -28,7 +29,7 @@ def main():
     config = parser.parse_args()
 
     try:
-        store = BrokerClient("https://localhost", verify=False)
+        store = AsyncBrokerClient("https://localhost", verify=False)
     except Exception as e:
         print_error(e, config.nocolor, config.silent)
         sys.exit(1)
@@ -39,7 +40,11 @@ def main():
         on_success=lambda t, o: print_success(t, o)
     )
 
-    cmd.run()
+    await cmd.run()
+
+
+def main():
+    asyncio.run(async_main())
 
 
 if __name__ == "__main__":

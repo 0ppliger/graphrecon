@@ -416,7 +416,7 @@ wheels = [
 [[package]]
 name = "oam-client"
 version = "0.1.0"
-source = { git = "https://github.com/0ppliger/oam-client.py.git?branch=master#3ea009901d25d71188c1a538a2e178b775d707cb" }
+source = { git = "https://github.com/0ppliger/oam-client.py.git?branch=master#35976626a5eac2346b16219fbb0c6927d2f53772" }
 dependencies = [
     { name = "httpx", extra = ["http2"] },
     { name = "httpx-sse" },
@@ -555,6 +555,22 @@ wheels = [
 name = "transformers"
 version = "0.1.0"
 source = { editable = "packages/transformers" }
+dependencies = [
+    { name = "certdump" },
+    { name = "dnsdump" },
+    { name = "dnsfuzz" },
+    { name = "oam-client" },
+    { name = "open-asset-model" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "certdump", editable = "packages/certdump" },
+    { name = "dnsdump", editable = "packages/dnsdump" },
+    { name = "dnsfuzz", editable = "packages/dnsfuzz" },
+    { name = "oam-client", git = "https://github.com/0ppliger/oam-client.py.git?branch=master" },
+    { name = "open-asset-model", git = "https://github.com/0ppliger/open-asset-model.py.git?branch=master" },
+]
 
 [[package]]
 name = "txtminer"

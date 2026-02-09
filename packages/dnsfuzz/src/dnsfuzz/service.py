@@ -56,24 +56,17 @@ class FuzzDNSCommand:
         :raises ValueError: when rate limiter receive impossible values
         """
         try:
-            _domain = name.from_text(domain)
+            self.domain = name.from_text(domain)
         except DNSException:
             raise
 
         try:
-            _wordlist = open(wordlist)
+            self.wordlist = open(wordlist)
         except OSError as e:
             raise e
 
         try:
-            _async_resolver = AsyncResolver(
-                filename=resolv,
-                configure=True)
-        except DNSException:
-            raise
-
-        try:
-            _sync_resolver = SyncResolver(
+            self.resolver = AsyncResolver(
                 filename=resolv,
                 configure=True)
         except DNSException:
@@ -94,17 +87,11 @@ class FuzzDNSCommand:
             on_failure(domain_name)
 
         self.core = DNSFuzz(
-            _domain,
-            _wordlist,
-            _async_resolver,
-            _sync_resolver,
+            self.domain,
+            self.wordlist,
+            self.resolver,
             success_handler,
             failure_handler)
-
-        try:
-            ensure_domain(_domain, _sync_resolver)
-        except DNSException:
-            raise
 
         try:
             self.ratelimiter = RateLimiter(
@@ -116,6 +103,11 @@ class FuzzDNSCommand:
         self.store = store
 
     async def run(self):
+        try:
+            await ensure_domain(self.domain, self.resolver)
+        except DNSException:
+            raise
+
         tasks: list[Task] = []
         async for sub in self.core.fuzz():
             await self.ratelimiter.try_acquire_async()

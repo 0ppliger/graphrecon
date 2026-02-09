@@ -2,11 +2,11 @@ import common.cli_setup  # noqa: F401
 
 import sys
 import json
+import asyncio
 from argparse import ArgumentParser
 from termcolor import colored
 from pygments import highlight, lexers, formatters
-
-from oam_client import BrokerClient
+from oam_client import AsyncBrokerClient
 from .service import DumpDNSCommand
 
 from common.output import print_error
@@ -75,7 +75,7 @@ def display_fail(
         print(_get_displayable_error("No record", nocolor))
 
 
-def main():
+async def async_main():
     parser = ArgumentParser(
         prog="dnsdump",
         description="Dump all DNS records by requesting every RRType.")
@@ -91,6 +91,18 @@ def main():
     parser.add_argument(
         "-rd", "--delay", help="rate limiter delay between batches (in ms)",
         type=int, default=300)
+    parser.add_argument(
+        "-t", "--timeout", help="DNS query timeout per nameserver (seconds)",
+        type=float, default=5.0)
+    parser.add_argument(
+        "-l", "--lifetime", help="Max total time per DNS query (seconds)",
+        type=float, default=10.0)
+    parser.add_argument(
+        "--retries", help="Number of retries on timeout or network error",
+        type=int, default=3)
+    parser.add_argument(
+        "--retry-delay", help="Delay between retries (seconds)",
+        type=float, default=1.0)
     parser.add_argument(
         "--nocolor", help="Disable colors on stdout",
         action="store_true")
@@ -110,7 +122,7 @@ def main():
     config = parser.parse_args()
 
     try:
-        store = BrokerClient("https://localhost", verify=False)
+        store = AsyncBrokerClient("https://localhost", verify=False)
     except Exception as e:
         print_error(e, config.nocolor, config.silent)
         sys.exit(1)
@@ -130,12 +142,20 @@ def main():
             on_failure=failure_handler,
             ratelimiter_batch=config.batch_size,
             ratelimiter_delay=config.delay,
+            timeout=config.timeout,
+            lifetime=config.lifetime,
+            retries=config.retries,
+            retry_delay=config.retry_delay,
         )
     except Exception as e:
         print_error(e, config.nocolor, config.silent)
         sys.exit(1)
 
-    cmd.run()
+    await cmd.run()
+
+
+def main():
+    asyncio.run(async_main())
 
 
 if __name__ == "__main__":

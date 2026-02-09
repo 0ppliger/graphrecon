@@ -7,8 +7,23 @@ authors = [
     { name = "Oppliger J.", email = "account@oppliger.cc" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "certdump",
+    "dnsdump",
+    "dnsfuzz",
+    "oam-client>=0.1.0",
+    "open-asset-model>=1.1.4",
+]
 
 [build-system]
 requires = ["uv_build>=0.9.28,<0.10.0"]
 build-backend = "uv_build"
+
+[tool.uv.sources]
+common = { workspace = true }
+dnsfuzz = { workspace = true }
+dnsdump = { workspace = true }
+certdump = { workspace = true }
+
+[project.scripts]
+transformers = "transformers.__main__:main"

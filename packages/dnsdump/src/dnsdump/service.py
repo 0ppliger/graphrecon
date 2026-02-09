@@ -1,11 +1,11 @@
 from dns import name
 from dns.rdata import Rdata
-from dns.resolver import Resolver
+from dns.asyncresolver import Resolver
 from dns.exception import DNSException
-from oam_client import BrokerClient
-from typing import Callable
-
+from oam_client import AsyncBrokerClient
 from asset_model import FQDN
+from typing import Callable, Awaitable
+
 from common.dns.utils import ensure_domain
 from common.ratelimiter import RateLimiter
 
@@ -15,57 +15,50 @@ from .core import dump_dns_records, DumpDNSGenerator
 
 class DumpDNSCommand:
 
-    IS_ASYNC: bool = False
+    IS_ASYNC: bool = True
 
+    domain: name.Name
+    resolver: Resolver
     dump:  DumpDNSGenerator
-    store: BrokerClient
+    store: AsyncBrokerClient
     ratelimiter: RateLimiter
-    on_success: Callable[[str, Rdata], None]
-    on_failure: Callable[[str], None]
+    on_success: Callable[[str, Rdata], Awaitable[None]]
+    on_failure: Callable[[str], Awaitable[None]]
 
     def __init__(
         self,
         domain: str,
-        store: BrokerClient,
+        store: AsyncBrokerClient,
         on_success: Callable[[str, Rdata], None],
         on_failure: Callable[[str], None],
         ratelimiter_delay: int = 300,
         ratelimiter_batch: int = 5,
         resolv: str = "/etc/resolv.conf",
+        timeout: float = 5.0,
+        lifetime: float = 10.0,
+        retries: int = 3,
+        retry_delay: float = 1.0,
     ):
         try:
-            _domain = name.from_text(domain)
+            self.domain = name.from_text(domain)
         except DNSException:
             raise
 
         try:
-            _resolver = Resolver(
+            self.resolver = Resolver(
                 filename=resolv,
                 configure=True)
         except DNSException:
             raise
 
+        self.resolver.timeout = timeout
+        self.resolver.lifetime = lifetime
+        self.retries = retries
+        self.retry_delay = retry_delay
         self.store = store
 
-        base = self.store.create_entity(FQDN(_domain.to_text(True)))
-
-        def success_handler(rdtype: str, rdata: Rdata):
-            data = dispatch(self.store, base, rdtype, rdata)
-            on_success(rdtype, data)
-
-        self.on_success = success_handler
-
-        def failure_handler(rdtype: str):
-            on_failure(rdtype)
-
-        self.on_failure = failure_handler
-
-        try:
-            ensure_domain(_domain, _resolver)
-        except DNSException:
-            raise
-
-        self.dump = dump_dns_records(_domain, _resolver)
+        self.on_success = on_success
+        self.on_failure = on_failure
 
         if ratelimiter_batch < 1:
             raise ValueError(
@@ -82,11 +75,36 @@ class DumpDNSCommand:
         except ValueError:
             raise
 
-    def run(self):
-        for rdtype, rdata, err in self.dump:
-            self.ratelimiter.try_acquire()
+    async def run(self):
+
+        print(FQDN(self.domain.to_text(True)))
+        self.base = await self.store.create_entity(FQDN(self.domain.to_text(True)))
+
+        async def success_handler(rdtype: str, rdata: Rdata):
+            try:
+                data = await dispatch(self.store, self.base, rdtype, rdata)
+            except Exception as e:
+                raise e
+            self.on_success(rdtype, data)
+
+        async def failure_handler(rdtype: str):
+            self.on_failure(rdtype)
+
+        try:
+            await ensure_domain(self.domain, self.resolver)
+        except DNSException:
+            raise
+
+        self.dump = dump_dns_records(
+            self.domain,
+            self.resolver,
+            retries=self.retries,
+            retry_delay=self.retry_delay,
+        )
+        async for rdtype, rdata, err in self.dump:
+            await self.ratelimiter.try_acquire_async()
             if rdata is None:
-                self.on_failure(rdtype)
+                await failure_handler(rdtype)
                 continue
 
-            self.on_success(rdtype, rdata)
+            await success_handler(rdtype, rdata)

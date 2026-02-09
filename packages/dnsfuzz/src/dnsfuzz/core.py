@@ -15,15 +15,14 @@ logger = getLogger(__name__)
 class DNSFuzz:
     domain:         Name
     wordlist:       TextIO
-    async_resolver: AsyncResolver
-    sync_resolver:  SyncResolver
+    resolver: AsyncResolver
     on_success:     Callable[[Name], None]
     on_failure:     Callable[[Name], None]
 
     async def does_domain_exists(self, domain: Name) -> bool:
         logger.debug(f"does_domain_exists:{domain}")
         try:
-            await self.async_resolver.resolve_name(domain)
+            await self.resolver.resolve_name(domain)
             logger.debug(f"does_domain_exists:{domain}:{True}")
             return True
         except DNSException:

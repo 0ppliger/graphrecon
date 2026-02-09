@@ -223,7 +223,7 @@ def _get_entity(o: Entity | T, asset_type: AssetType) -> Entity:
         raise ValueError(f"param must be a '{asset_type}' or a derived entity")
 
 
-def _store(
+async def _store(
         store: BrokerClient,
         a: Entity | A,
         a_type: AssetType,
@@ -232,128 +232,128 @@ def _store(
         rel: Relation
 ) -> tuple[Entity, Edge, Entity]:
     logger.info(a)
-    a_entity = store.create_entity(_get_entity(a, a_type).asset)
-    b_entity = store.create_entity(_get_entity(b, b_type).asset)
-    edge = store.create_edge(rel, a_entity.id, b_entity.id)
+    a_entity = await store.create_entity(_get_entity(a, a_type).asset)
+    b_entity = await store.create_entity(_get_entity(b, b_type).asset)
+    edge = await store.create_edge(rel, a_entity.id, b_entity.id)
     return (a_entity, edge, b_entity)
 
 # STORES ---
 
 
-def store_cert_common_name(
+async def store_cert_common_name(
         store: BrokerClient,
         cert: Entity | TLSCertificate,
         fqdn: Entity | FQDN
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(
+    return await _store(
         store,
         cert, AssetType.TLSCertificate,
         fqdn, AssetType.FQDN,
         SimpleRelation("common_name"))
 
 
-def store_domain_verified_for_org(
+async def store_domain_verified_for_org(
         store: BrokerClient,
         fqdn: Entity | FQDN,
         org: Entity | Organization
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(
+    return await _store(
         store,
         fqdn, AssetType.FQDN,
         org, AssetType.Organization,
         SimpleRelation("verified_for"))
 
 
-def store_cert_authority_org(
+async def store_cert_authority_org(
         store: BrokerClient,
         cert: Entity | TLSCertificate,
         org: Entity | Organization
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(
+    return await _store(
         store,
         cert, AssetType.TLSCertificate,
         org, AssetType.Organization,
         SimpleRelation("certificate_authority"))
 
 
-def store_org_org_unit_org(
+async def store_org_org_unit_org(
         store: BrokerClient,
         org: Entity | Organization,
         org_unit: Entity | Organization
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(
+    return await _store(
         store,
         org, AssetType.Organization,
         org_unit, AssetType.Organization,
         SimpleRelation("org_unit"))
 
 
-def store_cert_san_dns_name(
+async def store_cert_san_dns_name(
         store: BrokerClient,
         cert: Entity | TLSCertificate,
         fqdn: Entity | FQDN
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(
+    return await _store(
         store,
         cert, AssetType.TLSCertificate,
         fqdn, AssetType.FQDN,
         SimpleRelation("san_dns_name"))
 
 
-def store_cert_san_address(
+async def store_cert_san_address(
         store: BrokerClient,
         cert: Entity | TLSCertificate,
         addr: Entity | IPAddress
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(
+    return await _store(
         store,
         cert, AssetType.TLSCertificate,
         addr, AssetType.IPAddress,
         SimpleRelation("san_ip_address"))
 
 
-def store_cert_san_email(
+async def store_cert_san_email(
         store: BrokerClient,
         cert: Entity | TLSCertificate,
         email: Entity | Identifier
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(
+    return await _store(
         store,
         cert, AssetType.TLSCertificate,
         email, AssetType.Identifier,
         SimpleRelation("san_email_address"))
 
 
-def store_cert_san_url(
+async def store_cert_san_url(
         store: BrokerClient,
         cert: Entity | TLSCertificate,
         url: Entity | URL
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(
+    return await _store(
         store,
         cert, AssetType.TLSCertificate,
         url, AssetType.URL,
         SimpleRelation("san_url"))
 
 
-def store_cert_ocsp_server_url(
+async def store_cert_ocsp_server_url(
         store: BrokerClient,
         cert: Entity | TLSCertificate,
         url: Entity | URL
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(
+    return await _store(
         store,
         cert, AssetType.TLSCertificate,
         url, AssetType.URL,
         SimpleRelation("ocsp_server"))
 
 
-def store_cert_issuing_certificate_url(
+async def store_cert_issuing_certificate_url(
         store: BrokerClient,
         cert: Entity | TLSCertificate,
         url: Entity | URL
 ) -> tuple[Entity, Edge, Entity]:
-    return _store(
+    return await _store(
         store,
         cert, AssetType.TLSCertificate,
         url, AssetType.URL,

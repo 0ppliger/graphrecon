@@ -17,7 +17,7 @@ from .core import get_cert_chain
 
 class DumpCertificateCommand:
 
-    IS_ASYNC: bool = False
+    IS_ASYNC: bool = True
 
     domain: str
     store: BrokerClient
@@ -42,18 +42,18 @@ class DumpCertificateCommand:
 
         self.on_success = on_success
 
-    def run(self):
-        base = self.store.create_entity(FQDN(self.domain))
+    async def run(self):
+        base = await self.store.create_entity(FQDN(self.domain))
 
         previous_cert = None
 
         for cert in self.chain:
 
-            cert_entity = self.store.create_entity(
+            cert_entity = await self.store.create_entity(
                 lib.make_certificate_entity(cert))
 
             if previous_cert is not None:
-                self.store.create_edge(
+                await self.store.create_edge(
                     SimpleRelation("issuing_certificate"),
                     previous_cert.id,
                     cert_entity.id)
@@ -61,7 +61,7 @@ class DumpCertificateCommand:
             # handle CN subject
             CN_list = lib.handle_CN_subject(cert)
             for cn in CN_list:
-                lib.store_cert_common_name(
+                await lib.store_cert_common_name(
                     self.store, cert_entity, cn)
                 self.on_success("CN", cn.to_json())
 
@@ -70,10 +70,10 @@ class DumpCertificateCommand:
             for o in O_list:
                 self.on_success("O", o.to_json())
                 if cert_entity.asset.is_ca:
-                    lib.store_cert_authority_org(
+                    await lib.store_cert_authority_org(
                         self.store, cert_entity, o)
                 else:
-                    lib.store_domain_verified_for_org(
+                    await lib.store_domain_verified_for_org(
                         self.store, base, o)
             # In case there is multiple "O", they are all verified_for the CN
             # and SAN domains, but only the first one is use for other
@@ -89,13 +89,13 @@ class DumpCertificateCommand:
             for ou in OU_list:
                 self.on_success("OU", ou.to_json())
                 if primary_org:
-                    lib.store_org_org_unit_org(self.store, primary_org, ou)
+                    await lib.store_org_org_unit_org(self.store, primary_org, ou)
                 else:
                     if cert_entity.asset.is_ca:
-                        lib.store_cert_authority_org(
+                        await lib.store_cert_authority_org(
                             self.store, cert_entity, ou)
                     else:
-                        lib.store_domain_verified_for_org(
+                        await lib.store_domain_verified_for_org(
                             self.store, base, ou)
 
             # handle SAN names
@@ -103,10 +103,10 @@ class DumpCertificateCommand:
                 cert, x509.DNSName, FQDN, 'from_text')
             for name in san_names:
                 self.on_success("SAN", name.to_json())
-                lib.store_cert_san_dns_name(
+                await lib.store_cert_san_dns_name(
                     self.store, cert_entity, name)
                 for org in O_list:
-                    lib.store_domain_verified_for_org(
+                    await lib.store_domain_verified_for_org(
                         self.store, name, org)
 
             # handle SAN addresses
@@ -114,21 +114,21 @@ class DumpCertificateCommand:
                 cert, x509.IPAddress, IPAddress, 'from_text')
             for addr in san_addresses:
                 self.on_success("SAN", addr.to_json())
-                lib.store_cert_san_address(self.store, cert_entity, addr)
+                await lib.store_cert_san_address(self.store, cert_entity, addr)
 
             # handle SAN emails
             san_emails = lib.make_san_entry(
                 cert, x509.RFC822Name, Identifier, 'from_email')
             for email in san_emails:
                 self.on_success("SAN", email.to_json())
-                lib.store_cert_san_email(self.store, cert_entity, email)
+                await lib.store_cert_san_email(self.store, cert_entity, email)
 
             # handle SAN URLs
             san_urls = lib.make_san_entry(
                 cert, x509.UniformResourceIdentifier, URL, 'from_text')
             for url in san_urls:
                 self.on_success("SAN", url.to_json())
-                lib.store_cert_san_url(self.store, cert_entity, url)
+                await lib.store_cert_san_url(self.store, cert_entity, url)
 
             # handle OCSP URL
             ocsp_url = lib.make_info_access_entry(
@@ -136,7 +136,7 @@ class DumpCertificateCommand:
                 AuthorityInformationAccessOID.OCSP, URL, 'from_text')
             if ocsp_url is not None:
                 self.on_success("OCSP", ocsp_url.to_json())
-                lib.store_cert_ocsp_server_url(
+                await lib.store_cert_ocsp_server_url(
                     self.store, cert_entity, ocsp_url)
 
             # handle issuing cert URL
@@ -145,7 +145,7 @@ class DumpCertificateCommand:
                 AuthorityInformationAccessOID.CA_ISSUERS, URL, 'from_text')
             if iss_cert_url is not None:
                 self.on_success("ISS CERT", iss_cert_url.to_json())
-                lib.store_cert_issuing_certificate_url(
+                await lib.store_cert_issuing_certificate_url(
                     self.store, cert_entity, iss_cert_url)
 
             # handle CA repo URL
@@ -154,7 +154,7 @@ class DumpCertificateCommand:
                 SubjectInformationAccessOID.CA_REPOSITORY, URL, 'from_text')
             if ca_repo_url is not None:
                 self.on_success("CA REPO", ca_repo_url.to_json())
-                lib.store_cert_issuing_certificate_url(
+                await lib.store_cert_issuing_certificate_url(
                     self.store, cert_entity, ca_repo_url)
 
             previous_cert = cert_entity
