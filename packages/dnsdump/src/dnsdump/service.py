@@ -34,10 +34,10 @@ class DumpDNSCommand:
         ratelimiter_delay: int = 300,
         ratelimiter_batch: int = 5,
         resolv: str = "/etc/resolv.conf",
-        timeout: float = 5.0,
-        lifetime: float = 10.0,
+        timeout: int = 5000,
+        lifetime: int = 10000,
         retries: int = 3,
-        retry_delay: float = 1.0,
+        retry_delay: int = 1000,
     ):
         try:
             self.domain = name.from_text(domain)
@@ -51,10 +51,10 @@ class DumpDNSCommand:
         except DNSException:
             raise
 
-        self.resolver.timeout = timeout
-        self.resolver.lifetime = lifetime
+        self.resolver.timeout = timeout / 1000.0
+        self.resolver.lifetime = lifetime / 1000.0
         self.retries = retries
-        self.retry_delay = retry_delay
+        self.retry_delay = retry_delay / 1000.0
         self.store = store
 
         self.on_success = on_success

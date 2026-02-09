@@ -92,17 +92,17 @@ async def async_main():
         "-rd", "--delay", help="rate limiter delay between batches (in ms)",
         type=int, default=300)
     parser.add_argument(
-        "-t", "--timeout", help="DNS query timeout per nameserver (seconds)",
-        type=float, default=5.0)
+        "-t", "--timeout", help="DNS query timeout per nameserver (ms)",
+        type=int, default=5000)
     parser.add_argument(
-        "-l", "--lifetime", help="Max total time per DNS query (seconds)",
-        type=float, default=10.0)
+        "-l", "--lifetime", help="Max total time per DNS query (ms)",
+        type=int, default=10000)
     parser.add_argument(
         "--retries", help="Number of retries on timeout or network error",
         type=int, default=3)
     parser.add_argument(
-        "--retry-delay", help="Delay between retries (seconds)",
-        type=float, default=1.0)
+        "--retry-delay", help="Delay between retries (ms)",
+        type=int, default=1000)
     parser.add_argument(
         "--nocolor", help="Disable colors on stdout",
         action="store_true")

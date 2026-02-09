@@ -37,7 +37,7 @@ async def _resolve_with_retry(
             if attempt < retries - 1:
                 logger.debug(
                     "resolve %s %s failed (attempt %s/%s): %s, retrying in %.1fs",
-                    domain, rdtype, attempt + 1, retries, e, retry_delay,
+                    rdtype, domain, attempt + 1, retries, e, retry_delay,
                 )
                 await asyncio.sleep(retry_delay)
             else:
